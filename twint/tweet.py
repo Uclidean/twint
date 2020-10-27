@@ -241,8 +241,9 @@ def Tweet(tw, config):
     t.geo = config.Geo if config.Geo else ""
     t.source = config.Source if config.Source else ""
     # TODO: check this whether we need the list of all the users to whom this tweet is a reply or we only need
-    #  the immediately above user id
-    t.reply_to = {'user_id': tw['in_reply_to_user_id_str'], 'username': tw['in_reply_to_screen_name']} if tw.get('in_reply_to_user_id_str') else ''
+    #  the immediately above user ids
+
+    t.reply_to = [{'user_id': tw['in_reply_to_user_id_str'], 'username': tw['in_reply_to_screen_name']}] if tw.get('in_reply_to_user_id_str') else ''
     t.translate = ''
     t.trans_src = ''
     t.trans_dest = ''
