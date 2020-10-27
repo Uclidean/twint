@@ -79,10 +79,11 @@ def getRetweet(tw, _config):
         if int(tw["data-user-id"]) != _config.User_id:
             return _config.User_id, _config.Username
     else:
-        _rt_object = tw.find('span', 'js-retweet-text')
-        if _rt_object:
-            _rt_id = _rt_object.find('a')['data-user-id']
-            _rt_username = _rt_object.find('a')['href'][1:]
+        _is_rt = tw.get('retweeted_status_id')
+        if _is_rt:
+            _rt_obj = tw.get('entities')
+            _rt_id = _rt_obj.get('user_mentions')[0].get('id')
+            _rt_username = _rt_obj.get('user_mentions')[0].get('screen_name')
             return _rt_id, _rt_username
     return '', ''
 
@@ -223,14 +224,14 @@ def Tweet(tw, config):
     t.likes_count = tw['favorite_count']
     t.link = f"https://twitter.com/{t.username}/status/{t.id}"
     # TODO: someone who is familiar with this code, needs to take a look at what this is
-    # t.user_rt_id, t.user_rt = getRetweet(tw, config)
-    # t.retweet = True if t.user_rt else False
-    # t.retweet_id = ''
-    # t.retweet_date = ''
-    # if not config.Profile:
-    #     t.retweet_id = tw['data-retweet-id'] if t.user_rt else ''
-    #     t.retweet_date = datetime.fromtimestamp(((int(t.retweet_id) >> 22) + 1288834974657) / 1000.0).strftime(
-    #         "%Y-%m-%d %H:%M:%S") if t.user_rt else ''
+    t.user_rt_id, t.user_rt = getRetweet(tw, config)
+    t.retweet = True if t.user_rt else False
+    t.retweet_id = ''
+    t.retweet_date = ''
+    if not config.Profile:
+        t.retweet_id = tw.get('retweeted_status_id_str') if t.user_rt else ''
+        t.retweet_date = datetime.fromtimestamp(((int(t.retweet_id) >> 22) + 1288834974657) / 1000.0).strftime(
+            "%Y-%m-%d %H:%M:%S") if t.user_rt else ''
     try:
         t.quote_url = tw['quoted_status_permalink']['expanded'] if tw['is_quote_status'] else ''
     except KeyError:
@@ -241,7 +242,7 @@ def Tweet(tw, config):
     t.source = config.Source if config.Source else ""
     # TODO: check this whether we need the list of all the users to whom this tweet is a reply or we only need
     #  the immediately above user id
-    t.reply_to = {'user_id': tw['in_reply_to_user_id_str'], 'username': tw['in_reply_to_screen_name']}
+    t.reply_to = {'user_id': tw['in_reply_to_user_id_str'], 'username': tw['in_reply_to_screen_name']} if tw.get('in_reply_to_user_id_str') else ''
     t.translate = ''
     t.trans_src = ''
     t.trans_dest = ''
